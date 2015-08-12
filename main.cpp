@@ -4,7 +4,7 @@
 
 using namespace std;
 
-int COLS = 200, ROWS = 50;
+int COLS = 500, ROWS = 250;
 
 int main() {
     /*

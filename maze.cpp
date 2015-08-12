@@ -49,6 +49,7 @@ maze_t* init_maze(int width, int height) {
 
 int fill_maze(maze_t *maze) {
     // First random (uniform, p = 0.45) fill
+    printf("Fill maze randomly\n");
     static std::uniform_int_distribution<int> perc_distr(0, 100);
     maze_cell_t* cells = maze->cells;
     for (int i = 0, l = maze->width * maze->height; i < l; ++i) {
@@ -73,10 +74,12 @@ int fill_maze(maze_t *maze) {
     }
 
     // Make border walls
+    printf("Create border\n");
     make_border_walls(maze->cells, maze->width, maze->height);
 
     // Flood check
     // Fill flooded cells
+    printf("Preparing flood check\n");
     ff_cell_t ffill[maze->height][maze->width];
     int cnt = 0;
     for (int y = 0, ly = maze->height; y < ly; ++y) {
@@ -93,11 +96,11 @@ int fill_maze(maze_t *maze) {
     }
 
     // Mark flooded cells by cave index
+    printf("Running flood check\n");
     int cur_idx = -1;
     std::map<int, std::vector<ff_cell_t *> > caves;
     while(true) {
         cur_idx++;
-        //printf("Flooding for index %i\n", cur_idx);
         bool not_flooded_found = false;
         std::vector<ff_cell_t*> vec;
         std::vector<ff_cell_t *> tmp_vec;
@@ -144,8 +147,10 @@ int fill_maze(maze_t *maze) {
         caves.insert(std::pair<int, std::vector<ff_cell_t *> >(cur_idx, tmp_vec));
     }
 
-    std::map<int, cc_passageway> cc_map;
+    printf("Flood check done, %lu caves found\n", caves.size());
 
+    printf("Finding minimum straight dungeons between caves\n");
+    std::map<int, cc_passageway> cc_map;
     for (auto i : caves) {
         // right most cell
         int idx = i.first;
@@ -218,12 +223,22 @@ int fill_maze(maze_t *maze) {
         }
     }
 
+    Graph gr;
     for (auto it : cc_map) {
         int from = (it.first >> 16) & 0x0000FFFF;
         int to = it.first & 0x0000FFFF;
-        printf("(%i,%i): %i\n", from, to, it.second.get_dist());
+        gr.add_adge(from, to, it.second.get_dist());
     }
 
+    if (gr.connected()) {
+        printf("Graph is connected");
+    } else {
+        printf("Graph is NOT connected");
+    }
+
+    printf(" and contains %i vertices\n", gr.size());
+
+    // Copy to map
     cnt = 0;
     for (int y = 0, ly = maze->height; y < ly; ++y) {
         for (int x = 0, lx = maze->width; x < lx; ++x) {

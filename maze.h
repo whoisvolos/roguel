@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <map>
+#include "graph.h"
 
 struct maze_cell_t {
     bool is_floor;
